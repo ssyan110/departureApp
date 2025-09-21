@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departure Information</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        h1 {
+            color: #1a237e;
+            margin-bottom: 25px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        input {
+            width: calc(100% - 24px);
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: #3f51b5;
+            color: white;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #303f9f;
+        }
+        #results {
+            margin-top: 30px;
+            text-align: left;
+            padding: 20px;
+            background-color: #e8eaf6;
+            border-radius: 8px;
+            line-height: 1.8;
+            display: none; /* Hidden by default */
+        }
+        .result-item {
+            margin-bottom: 10px;
+        }
+        .result-item strong {
+            color: #1a237e;
+            min-width: 120px;
+            display: inline-block;
+        }
+        .selection-button {
+            background-color: #5c6bc0;
+            margin-top: 10px;
+        }
+        .error-message {
+            color: #c62828;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Check Your Departure Info</h1>
+        <div class="input-group">
+            <input type="text" id="firstName" placeholder="Enter your first name">
+            <input type="text" id="lastName" placeholder="Enter your last name">
+        </div>
+        <button onclick="searchDeparture()">Search</button>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        // This is the full, complete list of passengers from your PDF.
+        const departureData = [
+        // Page 1
+        { "firstName": "Xiaoping", "lastName": "Tu", "airline": "Korean Air", "flight": "KE 2117", "departureTime": "09:00", "airportTerminal": "GMP-I", "meetingTime": "05:00" },
+        { "firstName": "Jack Nanjie", "lastName": "Wen", "airline": "Korean Air", "flight": "KE 2117", "departureTime": "09:00", "airportTerminal": "GMP-I", "meetingTime": "05:00" },
+        { "firstName": "Julia Pham", "lastName": "Nguyen", "airline": "Tigerair Taiwan", "flight": "IT 603", "departureTime": "00:30", "airportTerminal": "ICN-T1", "meetingTime": "19:55 on 22 Sep" },
+        { "firstName": "Quoi Trong", "lastName": "Nguyen", "airline": "Tigerair Taiwan", "flight": "IT 603", "departureTime": "00:30", "airportTerminal": "ICN-T1", "meetingTime": "19:55 on 22 Sep" },
+        { "firstName": "Allison Roxanne", "lastName": "Smith", "airline": "Air Busan", "flight": "BX 164", "departureTime": "07:15", "airportTerminal": "ICN-T2", "meetingTime": "02:15" },
+        { "firstName": "Russell Thomas", "lastName": "Martinez", "airline": "Air Busan", "flight": "BX 164", "departureTime": "07:15", "airportTerminal": "ICN-T2", "meetingTime": "02:15" },
+        { "firstName": "Daliborka", "lastName": "Josipovic", "airline": "Korean Air", "flight": "KE 621", "departureTime": "07:50", "airportTerminal": "ICN-T2", "meetingTime": "" },
+        { "firstName": "Zlatko", "lastName": "Josipovic", "airline": "Korean Air", "flight": "KE 621", "departureTime": "07:50", "airportTerminal": "ICN-T2", "meetingTime": "" },
+        { "firstName": "Emmanuel Musongo", "lastName": "Nanje", "airline": "Korean Air", "flight": "KE 621", "departureTime": "07:50", "airportTerminal": "ICN-T2", "meetingTime": "" },
+        { "firstName": "Kristy Njaba", "lastName": "Nanje", "airline": "Korean Air", "flight": "KE 621", "departureTime": "07:50", "airportTerminal": "ICN-T2", "meetingTime": "" },
+        { "firstName": "Leathrese Montanano", "lastName": "Chappell", "airline": "Asiana Airlines", "flight": "OZ 701", "departureTime": "07:50", "airportTerminal": "ICN-T1", "meetingTime": "03:15" },
+        { "firstName": "Gary William", "lastName": "Chappell", "airline": "Asiana Airlines", "flight": "OZ 701", "departureTime": "07:50", "airportTerminal": "ICN-T1", "meetingTime": "03:15" },
+        { "firstName": "Min", "lastName": "Chen", "airline": "Asiana Airlines", "flight": "OZ 112", "departureTime": "07:55", "airportTerminal": "ICN-T1", "meetingTime": "03:15" },
+        { "firstName": "Yian", "lastName": "Xu", "airline": "Asiana Airlines", "flight": "OZ 112", "departureTime": "07:55", "airportTerminal": "ICN-T1", "meetingTime": "03:15" },
+        { "firstName": "Tinghong", "lastName": "Chen", "airline": "Asiana Airlines", "flight": "OZ 112", "departureTime": "07:55", "airportTerminal": "ICN-T1", "meetingTime": "03:15" },
+        // Page 2
+        { "firstName": "Kelly Kaihong", "lastName": "Jiang", "airline": "Asiana Airlines", "flight": "OZ 112", "departureTime": "07:55", "airportTerminal": "ICN-T1", "meetingTime": "03:15" },
+        { "firstName": "Julia", "lastName": "Huang", "airline": "Air Seoul", "flight": "RS 705", "departureTime": "08:10", "airportTerminal": "ICN-T2", "meetingTime": "" },
+        { "firstName": "Matthew", "lastName": "Williams", "airline": "Air Seoul", "flight": "RS 705", "departureTime": "08:10", "airportTerminal": "ICN-T2", "meetingTime": "" },
+        { "firstName": "Lysander Rivera", "lastName": "Garcia", "airline": "Cebu Pacific", "flight": "5J 185", "departureTime": "08:20", "airportTerminal": "ICN-T1", "meetingTime": "03:45" },
+        { "firstName": "Teresita Garcia", "lastName": "Collo", "airline": "Cebu Pacific", "flight": "5J 185", "departureTime": "08:20", "airportTerminal": "ICN-T1", "meetingTime": "03:45" },
+        { "firstName": "Qiaohua", "lastName": "Zou", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Mei Juan", "lastName": "Lin", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Wenhui", "lastName": "Liu", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Tina", "lastName": "Huang", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Jian", "lastName": "Zhang", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Xiuna", "lastName": "Chen", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Fang", "lastName": "Li", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Mei Fang", "lastName": "Chen", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Jayan", "lastName": "Liang", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Xiuna", "lastName": "Jiang", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Ping", "lastName": "Liang", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Elena", "lastName": "Liang", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Yunqin", "lastName": "Ke", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Qingming", "lastName": "Lin", "airline": "Korean Air", "flight": "KE 127", "departureTime": "08:20", "airportTerminal": "ICN-T2", "meetingTime": "03:45" },
+        { "firstName": "Xiaorong", "lastName": "Zhou", "airline": "Korean Air", "flight": "KE 865", "departureTime": "08:50", "airportTerminal": "ICN-T2", "meetingTime": "04:45" },
+        { "firstName": "Cifang", "lastName": "Zheng", "airline": "Korean Air", "flight": "KE 865", "departureTime": "08:50", "airportTerminal": "ICN-T2", "meetingTime": "04:45" },
+        { "firstName": "Araceli Adasa Hamoy", "lastName": "Hermosa", "airline": "Asiana Airlines", "flight": "OZ 102", "departureTime": "09:00", "airportTerminal": "ICN-T1", "meetingTime": "04:45" },
+        { "firstName": "Richard John", "lastName": "Hermosa", "airline": "Asiana Airlines", "flight": "OZ 102", "departureTime": "09:00", "airportTerminal": "ICN-T1", "meetingTime": "04:45" },
+        { "firstName": "Floramor", "lastName": "Lacerna", "airline": "Asiana Airlines", "flight": "OZ 102", "departureTime": "09:00", "airportTerminal": "ICN-T1", "meetingTime": "04:45" },
+        { "firstName": "Richard", "lastName": "Burila", "airline": "Asiana Airlines", "flight": "OZ 102", "departureTime": "09:00", "airportTerminal": "ICN-T1", "meetingTime": "04:45" },
+        { "firstName": "Koren", "lastName": "Mcbean", "airline": "Asiana Airlines", "flight": "OZ 222", "departureTime": "09:00", "airportTerminal": "ICN-T1", "meetingTime": "04:45" },
+        { "firstName": "Brandon", "lastName": "Mcbean", "airline": "Asiana Airlines", "flight": "OZ 222", "departureTime": "09:00", "airportTerminal": "ICN-T1", "meetingTime": "04:45" },
+        // Page 3
+        { "firstName": "Sandra Liang", "lastName": "Anderson", "airline": "Jeju Air", "flight": "7C 6101", "departureTime": "09:05", "airportTerminal": "ICN-T1", "meetingTime": "04:45" },
+        { "firstName": "Scott Roland", "lastName": "Anderson", "airline": "Jeju Air", "flight": "7C 6101", "departureTime": "09:05", "airportTerminal": "ICN-T1", "meetingTime": "04:45" },
+        { "firstName": "Kyle Matthew", "lastName": "Chontos", "airline": "Delta", "flight": "DL 7839", "departureTime": "09:30", "airportTerminal": "ICN-T2", "meetingTime": "04:45" },
+        { "firstName": "Omar Alfredo", "lastName": "Sequera Oliveros", "airline": "Korean Air", "flight": "KE 31", "departureTime": "09:30", "airportTerminal": "ICN-T2", "meetingTime": "04:45" },
+        { "firstName": "Ana Felicia", "lastName": "Sequera-Heyn", "airline": "Korean Air", "flight": "KE 31", "departureTime": "09:30", "airportTerminal": "ICN-T2", "meetingTime": "04:45" },
+        { "firstName": "Christina Panda", "lastName": "Vongpradith", "airline": "Korean Air", "flight": "KE 31", "departureTime": "09:30", "airportTerminal": "ICN-T2", "meetingTime": "04:45" },
+        { "firstName": "Ting-Lan", "lastName": "Chiu", "airline": "Korean Air", "flight": "KE 185", "departureTime": "10:30", "airportTerminal": "ICN-T2", "meetingTime": "05:40" },
+        { "firstName": "Cheng-Feng", "lastName": "Chiang", "airline": "Korean Air", "flight": "KE 185", "departureTime": "10:30", "airportTerminal": "ICN-T2", "meetingTime": "05:40" },
+        { "firstName": "Jun", "lastName": "Yuan", "airline": "Jeju Air", "flight": "7C 1373", "departureTime": "10:40", "airportTerminal": "ICN-T1", "meetingTime": "05:40" },
+        { "firstName": "Jiahui", "lastName": "Hong", "airline": "Jeju Air", "flight": "7C 1373", "departureTime": "10:40", "airportTerminal": "ICN-T1", "meetingTime": "05:40" },
+        { "firstName": "Ming Jian", "lastName": "Zhang", "airline": "Korean Air", "flight": "KE 37", "departureTime": "10:40", "airportTerminal": "ICN-T2", "meetingTime": "05:40" },
+        { "firstName": "Jing", "lastName": "Li", "airline": "Korean Air", "flight": "KE 37", "departureTime": "10:40", "airportTerminal": "ICN-T2", "meetingTime": "05:40" },
+        { "firstName": "Viola", "lastName": "Zhang", "airline": "Korean Air", "flight": "KE 37", "departureTime": "10:40", "airportTerminal": "ICN-T2", "meetingTime": "05:40" },
+        { "firstName": "Hongping", "lastName": "Zhou", "airline": "Korean Air", "flight": "KE 37", "departureTime": "10:40", "airportTerminal": "ICN-T2", "meetingTime": "05:40" },
+        { "firstName": "Julia Lin", "lastName": "Ma", "airline": "Jeju Air", "flight": "7C 6001", "departureTime": "11:00", "airportTerminal": "ICN-T1", "meetingTime": "06:45" },
+        { "firstName": "Yingchun", "lastName": "Ma", "airline": "Jeju Air", "flight": "7C 6001", "departureTime": "11:00", "airportTerminal": "ICN-T1", "meetingTime": "06:45" },
+        { "firstName": "Ngawang Tsering", "lastName": "Yawagyentsang", "airline": "VietJet Air", "flight": "VJ 961", "departureTime": "11:05", "airportTerminal": "ICN-T1", "meetingTime": "06:45" },
+        { "firstName": "Tensing D", "lastName": "Yawagyentsang", "airline": "VietJet Air", "flight": "VJ 961", "departureTime": "11:05", "airportTerminal": "ICN-T1", "meetingTime": "06:45" },
+        { "firstName": "Balan Kumari", "lastName": "Rai", "airline": "VietJet Air", "flight": "VJ 961", "departureTime": "11:05", "airportTerminal": "ICN-T1", "meetingTime": "06:45" },
+        { "firstName": "Nima", "lastName": "Sherpini", "airline": "VietJet Air", "flight": "VJ 961", "departureTime": "11:05", "airportTerminal": "ICN-T1", "meetingTime": "06:45" },
+        { "firstName": "Xue Wei", "lastName": "Gao", "airline": "Korean Air", "flight": "KE 897", "departureTime": "11:10", "airportTerminal": "ICN-T2", "meetingTime": "06:45" },
+        { "firstName": "Minying", "lastName": "Xu", "airline": "Korean Air", "flight": "KE 897", "departureTime": "11:10", "airportTerminal": "ICN-T2", "meetingTime": "06:45" },
+        { "firstName": "You Li", "lastName": "Xu", "airline": "Korean Air", "flight": "KE 897", "departureTime": "11:10", "airportTerminal": "ICN-T2", "meetingTime": "06:45" },
+        { "firstName": "You Ming", "lastName": "Wu", "airline": "Korean Air", "flight": "KE 897", "departureTime": "11:10", "airportTerminal": "ICN-T2", "meetingTime": "06:45" },
+        { "firstName": "Molly Tingjiun", "lastName": "Lin", "airline": "China Airlines", "flight": "CI 161", "departureTime": "12:35", "airportTerminal": "ICN-T2", "meetingTime": "07:45" },
+        { "firstName": "Jinghong", "lastName": "Ma", "airline": "China Southern Airlines", "flight": "CZ 314", "departureTime": "12:35", "airportTerminal": "ICN-T1", "meetingTime": "07:45" },
+        { "firstName": "Jun", "lastName": "Wang", "airline": "Air Premia", "flight": "YP 101", "departureTime": "12:45", "airportTerminal": "ICN-T1", "meetingTime": "07:45" },
+        // Page 4
+        { "firstName": "Mohit", "lastName": "Kumar", "airline": "Korean Air", "flight": "KE 497", "departureTime": "12:55", "airportTerminal": "ICN-T2", "meetingTime": "07:45" },
+        { "firstName": "Preeti", "lastName": "Verma", "airline": "Korean Air", "flight": "KE 497", "departureTime": "12:55", "airportTerminal": "ICN-T2", "meetingTime": "07:45" },
+        { "firstName": "Karamjeet", "lastName": "Kaur", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Tarlochan", "lastName": "Singh", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Taranjot", "lastName": "Bhari", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Prabhjot Gurkaram", "lastName": "Kaur", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Harjot Kaur", "lastName": "Bhari", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Sidhdeep Singh", "lastName": "Bhari", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Anthony", "lastName": "Roberts", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Markeesha", "lastName": "Rasheed", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Leslie Lena", "lastName": "Williams", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Maria Elena", "lastName": "Torres Cabrera", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Jayden", "lastName": "Torres", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Maria Guadalupe", "lastName": "Perez", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Lexi", "lastName": "Garcia Torres", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "En Lin", "lastName": "Chan", "airline": "Cathay Pacific", "flight": "CX 439", "departureTime": "13:40", "airportTerminal": "ICN-T1", "meetingTime": "08:50" },
+        { "firstName": "Chengchen", "lastName": "Li", "airline": "Asiana Airlines", "flight": "OZ 114", "departureTime": "14:05", "airportTerminal": "ICN-T1", "meetingTime": "09:50" },
+        { "firstName": "Laihua", "lastName": "Lin", "airline": "Asiana Airlines", "flight": "OZ 114", "departureTime": "14:05", "airportTerminal": "ICN-T1", "meetingTime": "09:50" },
+        { "firstName": "Wai Sun", "lastName": "Mow", "airline": "Korean Air", "flight": "KE 671", "departureTime": "15:40", "airportTerminal": "ICN-T2", "meetingTime": "10:35" },
+        { "firstName": "Yan Wah", "lastName": "Chong", "airline": "Korean Air", "flight": "KE 671", "departureTime": "15:40", "airportTerminal": "ICN-T2", "meetingTime": "10:35" },
+        { "firstName": "Edna Balido", "lastName": "Reyes", "airline": "Korean Air", "flight": "KE 23", "departureTime": "16:00", "airportTerminal": "ICN-T2", "meetingTime": "11:25" },
+        { "firstName": "Renato Singson", "lastName": "Reyes", "airline": "Korean Air", "flight": "KE 23", "departureTime": "16:00", "airportTerminal": "ICN-T2", "meetingTime": "11:25" },
+        { "firstName": "Lakshmi Narayana", "lastName": "Charugundla", "airline": "Delta", "flight": "DL 188", "departureTime": "16:25", "airportTerminal": "ICN-T2", "meetingTime": "11:25" },
+        { "firstName": "Vineeth", "lastName": "Charugundla", "airline": "Delta", "flight": "DL 188", "departureTime": "16:25", "airportTerminal": "ICN-T2", "meetingTime": "11:25" },
+        { "firstName": "Wayne Patrick", "lastName": "King", "airline": "Delta", "flight": "DL 188", "departureTime": "16:25", "airportTerminal": "ICN-T2", "meetingTime": "11:25" },
+        { "firstName": "Susan Bolick", "lastName": "King", "airline": "Delta", "flight": "DL 188", "departureTime": "16:25", "airportTerminal": "ICN-T2", "meetingTime": "11:25" },
+        { "firstName": "Nadia", "lastName": "Deslhommes", "airline": "Delta", "flight": "DL 188", "departureTime": "16:25", "airportTerminal": "ICN-T2", "meetingTime": "11:25" },
+        // Page 5
+        { "firstName": "Susan Talili", "lastName": "Stringer", "airline": "Delta", "flight": "DL 188", "departureTime": "16:25", "airportTerminal": "ICN-T2", "meetingTime": "11:25" },
+        { "firstName": "Hong", "lastName": "Chang", "airline": "China Southern Airlines", "flight": "CZ 3062", "departureTime": "16:45", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Baljinder", "lastName": "Singh", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Navreet", "lastName": "Kaur", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Japnaam Singh", "lastName": "Kular", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Anahat", "lastName": "Kaur", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Daljit Kaur", "lastName": "Kaur", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Harsahib", "lastName": "Deol", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Rajinder", "lastName": "Mohaar", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Hergunn S", "lastName": "Kang", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Randeep Singh", "lastName": "Kang", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Kulwinder", "lastName": "Kaloty", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Gurneet Kaur", "lastName": "Kang", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Dalbir", "lastName": "Kaur", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Ranjit Kaur", "lastName": "Pannu", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Lovepreet", "lastName": "Singh", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Tarandeep", "lastName": "Kaur", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Fateh Singh", "lastName": "Pannu", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Baljinder", "lastName": "Singh", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Satinderjit", "lastName": "Kaur", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Manker", "lastName": "Biah", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Amandeep Kaur", "lastName": "Mohaar", "airline": "United Airlines", "flight": "UA 892", "departureTime": "16:50", "airportTerminal": "ICN-T1", "meetingTime": "12:00" },
+        { "firstName": "Li Kwan", "lastName": "Saw", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Kevatkumar Ramanbl", "lastName": "Patel", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Sanmati Ronak", "lastName": "Patel", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Carl", "lastName": "Logan", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Yen-Linh Thi", "lastName": "Huynh", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        // Page 6
+        { "firstName": "Lissa Marie", "lastName": "Jeanty-Claude", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Gerald Durkeim", "lastName": "Claude", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Fitzgerald Samuel", "lastName": "Claude", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Sarah Dang", "lastName": "Quan", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Samantha", "lastName": "Quan", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Yvonne", "lastName": "Julien", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Stephen Selwyn", "lastName": "Julien", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Marithes", "lastName": "Peters", "airline": "American Airlines", "flight": "AA 280", "departureTime": "17:25", "airportTerminal": "ICN-T1", "meetingTime": "13:10" },
+        { "firstName": "Kishore Rasiklal", "lastName": "Shah", "airline": "Air Canada", "flight": "AC 64", "departureTime": "17:45", "airportTerminal": "ICN-T1", "meetingTime": "" },
+        { "firstName": "Nandini Kishore", "lastName": "Shah", "airline": "Air Canada", "flight": "AC 64", "departureTime": "17:45", "airportTerminal": "ICN-T1", "meetingTime": "" },
+        { "firstName": "Tav Harleen Kaur", "lastName": "Dhillon", "airline": "Air Canada", "flight": "AC 64", "departureTime": "17:45", "airportTerminal": "ICN-T1", "meetingTime": "" },
+        { "firstName": "Tajinder Kaur", "lastName": "Athwal", "airline": "Air Canada", "flight": "AC 64", "departureTime": "17:45", "airportTerminal": "ICN-T1", "meetingTime": "" },
+        { "firstName": "Chanthasone", "lastName": "Vongpradith", "airline": "Korean Air", "flight": "KE 651", "departureTime": "18:05", "airportTerminal": "ICN-T2", "meetingTime": "13:30" },
+        { "firstName": "Vikki", "lastName": "Taysavang", "airline": "Korean Air", "flight": "KE 651", "departureTime": "18:05", "airportTerminal": "ICN-T2", "meetingTime": "13:30" },
+        { "firstName": "Deepa", "lastName": "Madadi", "airline": "Delta", "flight": "DL 26", "departureTime": "18:50", "airportTerminal": "ICN-T2", "meetingTime": "14:15" },
+        { "firstName": "Bharath", "lastName": "Madadi", "airline": "Delta", "flight": "DL 26", "departureTime": "18:50", "airportTerminal": "ICN-T2", "meetingTime": "14:15" },
+        { "firstName": "Mayumi Marlene", "lastName": "Cole", "airline": "Delta", "flight": "DL 26", "departureTime": "18:50", "airportTerminal": "ICN-T2", "meetingTime": "14:15" },
+        { "firstName": "Firmen Ligaspo", "lastName": "Zarco", "airline": "Jeju Air", "flight": "7C 2103", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Sonie", "lastName": "Derius", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Josue", "lastName": "Mezier", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Laureen Josie", "lastName": "Mezier", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Danfeng", "lastName": "Chen", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Fei", "lastName": "Li", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Aung Myo", "lastName": "Myat", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Zun Hlaing", "lastName": "Phu", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Khin Nan", "lastName": "Satt", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Sai Pan", "lastName": "Hseng", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        // Page 7
+        { "firstName": "Jaslin", "lastName": "Chahal", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Sarevjit", "lastName": "Singh", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Rosalin", "lastName": "Singh", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Amritpal", "lastName": "Singh", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Sarvjit", "lastName": "Kaur", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Aman", "lastName": "Yadav", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Nishi", "lastName": "Yadav", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Nita Rajendra", "lastName": "Dalal", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Rajendra Manharlal", "lastName": "Dalal", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Rohan Rajendra", "lastName": "Dalal", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Teena Bianca", "lastName": "Patel", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Vinay Rajendra", "lastName": "Dalal", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Yash", "lastName": "Yadav", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Lavern", "lastName": "Young", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Paul", "lastName": "Young", "airline": "Air Canada", "flight": "AC 62", "departureTime": "19:05", "airportTerminal": "ICN-T1", "meetingTime": "14:15" },
+        { "firstName": "Surendra Prakash", "lastName": "Malla", "airline": "Delta", "flight": "DL 196", "departureTime": "19:20", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Lata", "lastName": "Marsani Malla", "airline": "Delta", "flight": "DL 196", "departureTime": "19:20", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Ying C", "lastName": "Lay", "airline": "Delta", "flight": "DL 7843", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Qiang", "lastName": "Chen", "airline": "Delta", "flight": "DL 7843", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Deja Nya", "lastName": "Wahid", "airline": "Delta", "flight": "DL 7843", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Samantha", "lastName": "Davy", "airline": "Delta", "flight": "DL 7843", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Diana", "lastName": "Menear", "airline": "Delta", "flight": "DL 7843", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Michelle", "lastName": "Williams", "airline": "Korean Air", "flight": "KE 85", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Kunal Anilkumar", "lastName": "Patel", "airline": "Korean Air", "flight": "KE 85", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Himali Kunal", "lastName": "Patel", "airline": "Korean Air", "flight": "KE 85", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Shivansh Kunal", "lastName": "Patel", "airline": "Korean Air", "flight": "KE 85", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Yuanyuan", "lastName": "Yuan", "airline": "Korean Air", "flight": "KE 85", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        // Page 8
+        { "firstName": "Fang", "lastName": "Wang", "airline": "Korean Air", "flight": "KE 85", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Shirlina", "lastName": "Knapp", "airline": "Korean Air", "flight": "KE 85", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Erik", "lastName": "Knapp", "airline": "Korean Air", "flight": "KE 85", "departureTime": "19:30", "airportTerminal": "ICN-T2", "meetingTime": "14:45" },
+        { "firstName": "Rowena", "lastName": "Baladad", "airline": "EVA Air", "flight": "BR 159", "departureTime": "19:45", "airportTerminal": "ICN-T1", "meetingTime": "14:45" },
+        { "firstName": "Jasmine Moriah", "lastName": "Baladad-Nalder", "airline": "EVA Air", "flight": "BR 159", "departureTime": "19:45", "airportTerminal": "ICN-T1", "meetingTime": "14:45" },
+        { "firstName": "Lauro Amorin", "lastName": "Baladad Jr", "airline": "EVA Air", "flight": "BR 159", "departureTime": "19:45", "airportTerminal": "ICN-T1", "meetingTime": "14:45" },
+        { "firstName": "Maria Espiritu", "lastName": "Baladad", "airline": "EVA Air", "flight": "BR 159", "departureTime": "19:45", "airportTerminal": "ICN-T1", "meetingTime": "14:45" },
+        { "firstName": "Miaoyan", "lastName": "Yang", "airline": "Korean Air", "flight": "KE 177", "departureTime": "19:45", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Li Jiao", "lastName": "Ni", "airline": "Cathay Pacific", "flight": "CX 419", "departureTime": "20:05", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Feng Jiao", "lastName": "Lin", "airline": "Cathay Pacific", "flight": "CX 419", "departureTime": "20:05", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Gloria", "lastName": "Flores", "airline": "Korean Air", "flight": "KE 615", "departureTime": "20:05", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Jaime", "lastName": "Flores", "airline": "Korean Air", "flight": "KE 615", "departureTime": "20:05", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Purita Magpatoc", "lastName": "Lakes", "airline": "Korean Air", "flight": "KE 615", "departureTime": "20:05", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Marilou Concillo", "lastName": "Rice", "airline": "Korean Air", "flight": "KE 615", "departureTime": "20:05", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Ricardo Martin", "lastName": "Villaescusa Rosas", "airline": "Korean Air", "flight": "KE 11", "departureTime": "20:25", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Alma Patricia", "lastName": "Pineda Landeros", "airline": "Korean Air", "flight": "KE 11", "departureTime": "20:25", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Sabina", "lastName": "Villaescusa Pineda", "airline": "Korean Air", "flight": "KE 11", "departureTime": "20:25", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Chito Mendoza", "lastName": "Roxas", "airline": "Philippine Airlines", "flight": "PR 469", "departureTime": "20:30", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Sheila Salunga", "lastName": "Roxas", "airline": "Philippine Airlines", "flight": "PR 469", "departureTime": "20:30", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Christopher John Mir", "lastName": "Pacifico", "airline": "Philippine Airlines", "flight": "PR 469", "departureTime": "20:30", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Lori Faye Tanwangco", "lastName": "Pacifico", "airline": "Philippine Airlines", "flight": "PR 469", "departureTime": "20:30", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Ricardo", "lastName": "Villareal", "airline": "Philippine Airlines", "flight": "PR 469", "departureTime": "20:30", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Ramesh", "lastName": "Srinivasan", "airline": "China Airlines", "flight": "CI 163", "departureTime": "20:35", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Srividya", "lastName": "Ramesh", "airline": "China Airlines", "flight": "CI 163", "departureTime": "20:35", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Qindan", "lastName": "Zheng", "airline": "Xiamen Airlines", "flight": "MF 878", "departureTime": "20:35", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Gaojin", "lastName": "Hu", "airline": "Xiamen Airlines", "flight": "MF 878", "departureTime": "20:35", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Darren Z", "lastName": "Hu", "airline": "Xiamen Airlines", "flight": "MF 878", "departureTime": "20:35", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Weile", "lastName": "Zheng", "airline": "Xiamen Airlines", "flight": "MF 878", "departureTime": "20:35", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        // Page 9
+        { "firstName": "Meixiu", "lastName": "Chen", "airline": "Xiamen Airlines", "flight": "MF 878", "departureTime": "20:35", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Meijuan", "lastName": "Chen", "airline": "Xiamen Airlines", "flight": "MF 878", "departureTime": "20:35", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Jing Jing", "lastName": "Zhao", "airline": "Xiamen Airlines", "flight": "MF 878", "departureTime": "20:35", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Bingyun", "lastName": "Lin", "airline": "Xiamen Airlines", "flight": "MF 878", "departureTime": "20:35", "airportTerminal": "ICN-T2", "meetingTime": "15:30" },
+        { "firstName": "Lu", "lastName": "Lu", "airline": "Asiana Airlines", "flight": "OZ 204", "departureTime": "20:40", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Masayuki", "lastName": "Nakayama", "airline": "Asiana Airlines", "flight": "OZ 204", "departureTime": "20:40", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Sebastien Moise", "lastName": "Balan", "airline": "WestJet", "flight": "WS 87", "departureTime": "20:45", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Gaetan", "lastName": "Semanou", "airline": "WestJet", "flight": "WS 87", "departureTime": "20:45", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Wanyin", "lastName": "Tan", "airline": "WestJet", "flight": "WS 87", "departureTime": "20:45", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Sarah", "lastName": "Tan", "airline": "WestJet", "flight": "WS 87", "departureTime": "20:45", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Vansh", "lastName": "Rajput", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Chau Giang", "lastName": "Le", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Tu Van", "lastName": "Le", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Mohinder", "lastName": "Kumar", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Kevin Kuan Chang", "lastName": "Lee", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Nancy Tai-Yu", "lastName": "Wu", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Austin Walker", "lastName": "Wong", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Jacky Yen Chuan", "lastName": "Wu", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Jennifer", "lastName": "Lee", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Yung-Huei Liu", "lastName": "Wu", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Anantha Lakshmi", "lastName": "Tayyebi", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Vincent Abram", "lastName": "Jones", "airline": "Asiana Airlines", "flight": "OZ 212", "departureTime": "20:55", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Shirley", "lastName": "Zheng", "airline": "Asiana Airlines", "flight": "OZ 224", "departureTime": "21:05", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Jordan", "lastName": "Watkins", "airline": "Asiana Airlines", "flight": "OZ 224", "departureTime": "21:05", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Mario Ernesto", "lastName": "Moreira", "airline": "Asiana Airlines", "flight": "OZ 178", "departureTime": "21:10", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Mylene Yvette", "lastName": "Moreira", "airline": "Asiana Airlines", "flight": "OZ 178", "departureTime": "21:10", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Aldir U", "lastName": "Moreira", "airline": "Asiana Airlines", "flight": "OZ 178", "departureTime": "21:10", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Jair Ramses", "lastName": "Moreira", "airline": "Asiana Airlines", "flight": "OZ 178", "departureTime": "21:10", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        // Page 10
+        { "firstName": "Elvira", "lastName": "Cano", "airline": "Asiana Airlines", "flight": "OZ 178", "departureTime": "21:10", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Aylene Linnette", "lastName": "Moreira", "airline": "Asiana Airlines", "flight": "OZ 178", "departureTime": "21:10", "airportTerminal": "ICN-T1", "meetingTime": "15:30" },
+        { "firstName": "Chloe", "lastName": "Xu", "airline": "Air Premia", "flight": "YP 131", "departureTime": "21:30", "airportTerminal": "ICN-T1", "meetingTime": "16:45" },
+        { "firstName": "Weiyou", "lastName": "Chen", "airline": "Air Premia", "flight": "YP 131", "departureTime": "21:30", "airportTerminal": "ICN-T1", "meetingTime": "16:45" },
+        { "firstName": "Phoebe Fei", "lastName": "Chen", "airline": "Air Premia", "flight": "YP 131", "departureTime": "21:30", "airportTerminal": "ICN-T1", "meetingTime": "16:45" },
+        { "firstName": "Felix Kai", "lastName": "Chen", "airline": "Air Premia", "flight": "YP 131", "departureTime": "21:30", "airportTerminal": "ICN-T1", "meetingTime": "16:45" },
+        { "firstName": "Lina Nikolova", "lastName": "Baharova", "airline": "KLM", "flight": "KL 856", "departureTime": "22:25", "airportTerminal": "ICN-T2", "meetingTime": "17:20" },
+        { "firstName": "Jun Cheng", "lastName": "Zhao", "airline": "HK Express", "flight": "UO 627", "departureTime": "22:30", "airportTerminal": "ICN-T1", "meetingTime": "" },
+    ];
+
+        function searchDeparture() {
+            const firstName = document.getElementById('firstName').value.trim().toLowerCase();
+            const lastName = document.getElementById('lastName').value.trim().toLowerCase();
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.style.display = 'block'; // Make results visible
+
+            if (!firstName || !lastName) {
+                resultsDiv.innerHTML = `<p class="error-message">Please enter both first and last name.</p>`;
+                return;
+            }
+
+            const matches = departureData.filter(p => 
+                p.firstName.toLowerCase().includes(firstName) && 
+                p.lastName.toLowerCase().includes(lastName)
+            );
+
+            if (matches.length === 0) {
+                resultsDiv.innerHTML = `<p>No matching record found. Please check your spelling or contact the front desk.</p>`;
+            } else if (matches.length === 1) {
+                displayInfo(matches[0]);
+            } else {
+                promptForSelection(matches);
+            }
+        }
+
+        function displayInfo(person) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="result-item"><strong>Full Name:</strong> ${person.firstName} ${person.lastName}</div>
+                <div class="result-item"><strong>✈️ Flight:</strong> ${person.airline} (${person.flight})</div>
+                <div class="result-item"><strong>🛫 Departure:</strong> ${person.departureTime}</div>
+                <div class="result-item"><strong>📍 Terminal:</strong> ${person.airportTerminal}</div>
+                <div class="result-item"><strong>⏰ Meeting Time:</strong> ${person.meetingTime}</div>
+            `;
+            resultsDiv.style.display = 'block';
+        }
+        
+        function promptForSelection(matches) {
+            const resultsDiv = document.getElementById('results');
+            let buttonsHtml = '<p>We found multiple people with that name. Please select the correct person:</p>';
+            matches.forEach((person, index) => {
+                // Safely pass the person object to the onclick function
+                const personJsonString = encodeURIComponent(JSON.stringify(person));
+                buttonsHtml += `<button class="selection-button" onclick='displayInfo(JSON.parse(decodeURIComponent("${personJsonString}")))'>${person.firstName} ${person.lastName}</button>`;
+            });
+            resultsDiv.innerHTML = buttonsHtml;
+            resultsDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
